@@ -21,12 +21,13 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = Axes3D(fig)
     start_time = time.time()
-    height = 10
-    width = 10
-    locx = 1
-    locy = 1
-    z = get_gaussion_mask(height, width, locx, locx, 2)
+    height = 3
+    width = 3
+    locx = 2
+    locy = 2
+    z = get_gaussion_mask(height, width, locx, locx, 3)
     print(z)
+    print(((z<0.01)&(z>0)).sum())
     print(time.time()-start_time)
     y = np.arange(height).reshape((height, 1)).repeat(width, 1)
     x = np.arange(width).reshape((1, width)).repeat(height, 0)
