@@ -21,11 +21,11 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = Axes3D(fig)
     start_time = time.time()
-    height = 3
-    width = 3
-    locx = 2
-    locy = 2
-    z = get_gaussion_mask(height, width, locx, locx, 3)
+    height = 2
+    width = 2
+    locx = 1
+    locy = 1
+    z = get_gaussion_mask(height, width, locx, locx, 1)
     print(z)
     print(((z<0.01)&(z>0)).sum())
     print(time.time()-start_time)

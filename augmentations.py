@@ -85,6 +85,12 @@ class SubtractMeans(object):
     def __call__(self, image, boxes=None, labels=None):
         image = image.astype(np.float32)
         image -= self.mean
+        return image.astype(np.float32), boxes, labels
+
+class Normalize(object):
+    def __call__(self, image, boxes=None, labels=None):
+        image = image.astype(np.float32)
+        image -= 127.5
         image /= 127.5
         return image.astype(np.float32), boxes, labels
 
@@ -658,9 +664,13 @@ class SSDAugmentation(object):
             RandomMirror(),
             ToPercentCoords(),
             Resize(self.size),
-            SubtractMeans(self.mean)
-            # ToTorchTensor()
+            # SubtractMeans(self.mean)
+            Normalize()
         ])
 
     def __call__(self, img, boxes, labels):
-        return self.augment(img, boxes, labels)
+        while True:
+            try:
+                return self.augment(img, boxes, labels)
+            except Exception as e:
+                pass

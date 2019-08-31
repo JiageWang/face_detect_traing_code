@@ -108,6 +108,10 @@ class WIDERFaceDetection(data.Dataset):
                 self.event_ids.append(directory)
                 self.label_ids.append(bboxes)
                 # yield DATA(os.path.join(self.path_to_image, directory,  im_name + '.jpg'), bboxes)
+
+        # self.label_ids = self.label_ids[:32]
+        # self.img_ids = self.img_ids[:32]
+        # self.event_ids = self.event_ids[:32]
         print("Error bbox number to filter : %d,  bbox number: %d" % (error_bbox, train_bbox))
 
     def __getitem__(self, index):
@@ -120,8 +124,9 @@ class WIDERFaceDetection(data.Dataset):
     def pull_item(self, index):
 
         target = self.label_ids[index]
-        # img = cv2.imread(self.img_ids[index])
-        img = cv2.imdecode(np.fromfile(self.img_ids[index], dtype=np.uint8), -1)  # -1表示cv2.IMREAD_UNCHANGED
+        # print(self.img_ids[index])
+        img = cv2.imread(self.img_ids[index])
+        # img = cv2.imdecode(np.fromfile(self.img_ids[index], dtype=np.uint8), -1)  # -1表示cv2.IMREAD_UNCHANGED
 
         height, width, channels = img.shape
         if self.target_transform is not None:
@@ -181,7 +186,7 @@ class WIDERFaceDetection(data.Dataset):
         Return:
             PIL img
         '''
-        return cv2.imread(self.img_ids[index], cv2.IMREAD_COLOR)
+        return cv2.imdecode(np.fromfile(self.img_ids[index], dtype=np.uint8), -1)  # -1表示cv2.IMREAD_UNCHANGED
 
     def pull_event(self, index):
         return self.event_ids[index]

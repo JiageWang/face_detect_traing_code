@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchsummary import summary
@@ -19,7 +18,6 @@ def conv1x1(inp, oup):
         nn.BatchNorm2d(oup),
         nn.ReLU6(inplace=True)
     )
-
 
 
 def conv_dw(inp, oup, stride):
@@ -51,13 +49,15 @@ class ConvNet(nn.Module):
         super().__init__()
         # 3 x 640 x640
         self.base = nn.Sequential(
-            conv_dw(3, 32, 2),
-            conv_dw(32, 32, 1),
+            conv_bn(3, 32, 2),
+            conv_bn(32, 32, 1),
+            conv_bn(32, 32, 1),
             # 32 x 320 x 320 ==> 1:2
-            conv_dw(32, 64, 2),
+            conv_bn(32, 64, 2),
             # 64 x 160 x 160 ==> 1:4
-            conv_dw(64, 64, 1),
-            conv_dw(64, 64, 2),
+            conv_bn(64, 64, 1),
+            conv_bn(64, 64, 1),
+            conv_bn(64, 64, 2),
             # 64 x 80 x 80 ==> 1:8
         )
         self.features = nn.Sequential(
@@ -86,47 +86,49 @@ class ConvNet(nn.Module):
             ),
             # 128 x 5 x 5  ==>> 1:128
             nn.Sequential(
-                conv_dw(128, 128, 2),
-                ResBlock(128, 128, 1),
-                ResBlock(128, 128, 1),
+                conv_dw(128, 256, 2),
+                ResBlock(256, 256, 1),
+                ResBlock(256, 256, 1),
             ),
             # 128 x 3 x 3  ==>> 1:213
             nn.Sequential(
-                conv_dw(128, 128, 2),
-                ResBlock(128, 128, 1),
-                ResBlock(128, 128, 1),
+                conv_dw(256, 256, 2),
+                ResBlock(256, 256, 1),
+                ResBlock(256, 256, 1),
             )
             # 128 x 1 x 1  ==>> 1:640
         )
 
         self.branchs = nn.Sequential(
             nn.Sequential(
-                conv1x1(64, 32),
-                conv1x1(32, 5)
+                nn.Conv2d(64, 32, 3, 1, 1),
+                nn.Conv2d(32, 5, 3, 1, 1),
             ),
             nn.Sequential(
-                conv1x1(64, 32),
-                conv1x1(32, 5)
+                nn.Conv2d(64, 32, 3, 1, 1),
+                nn.Conv2d(32, 5, 3, 1, 1),
             ),
             nn.Sequential(
-                conv1x1(128, 64),
-                conv1x1(64, 32),
-                conv1x1(32, 5)
+                nn.Conv2d(128, 64, 3, 1, 1),
+                nn.Conv2d(64, 32, 3, 1, 1),
+                nn.Conv2d(32, 5, 3, 1, 1),
             ),
             nn.Sequential(
-                conv1x1(128, 64),
-                conv1x1(64, 32),
-                conv1x1(32, 5)
+                nn.Conv2d(128, 64, 3, 1, 1),
+                nn.Conv2d(64, 32, 3, 1, 1),
+                nn.Conv2d(32, 5, 3, 1, 1),
             ),
             nn.Sequential(
-                conv1x1(128, 64),
-                conv1x1(64, 32),
-                conv1x1(32, 5)
+                nn.Conv2d(256, 128, 3, 1, 1),
+                nn.Conv2d(128, 64, 3, 1, 1),
+                nn.Conv2d(64, 32, 3, 1, 1),
+                nn.Conv2d(32, 5, 3, 1, 1)
             ),
             nn.Sequential(
-                conv1x1(128, 64),
-                conv1x1(64, 32),
-                conv1x1(32, 5)
+                nn.Conv2d(256, 128, 3, 1, 1),
+                nn.Conv2d(128, 64, 3, 1, 1),
+                nn.Conv2d(64, 32, 3, 1, 1),
+                nn.Conv2d(32, 5, 3, 1, 1)
             ))
         self.weight_init()
 
@@ -146,14 +148,15 @@ class ConvNet(nn.Module):
     def _layer_init(self, m):
         # 使用isinstance来判断m属于什么类型
         if isinstance(m, nn.Conv2d):
-            n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-            m.weight.data.normal_(0, np.sqrt(2. / n))
+            nn.init.kaiming_normal_(m.weight.data)
+            # m.bias.data.zero_()
         elif isinstance(m, nn.BatchNorm2d):
             m.weight.data.fill_(1)
             m.bias.data.zero_()
         elif isinstance(m, nn.Linear):
             m.weight.data.normal_(0, 0.01)
             m.bias.data.zero_()
+
 
 if __name__ == "__main__":
     net = ConvNet().train()
